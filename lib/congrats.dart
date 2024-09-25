@@ -63,9 +63,9 @@ class CongratulationsScreen extends StatelessWidget {
                       ),
                       onPressed: () {
                         Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MyApp()), 
-                    );
+                        context,
+                        MaterialPageRoute(builder: (context) => MyApp()), 
+                      );
                       },
                       child: const Text(
                         'Finish',
