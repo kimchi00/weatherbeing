@@ -1,0 +1,44 @@
+name: weatherbeing
+description: A new Flutter project.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  firebase_core: ^2.26.0
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.5.6
+  firebase_auth: ^4.17.7
+  flutter_native_splash: ^2.4.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: "^0.14.1"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/main.png
+    - assets/images/logo.png
+    - assets/images/logo2.png
+    - assets/images/sex.png
+    - assets/images/bmi.png
+
+flutter_native_splash:
+  color: "#FAAEC3"
+  image: assets/images/logo.png
+  android_gravity: center
+  android_12:
+    image: assets/images/logo.png
+    android_gravity: center
+  android: true
+  ios: true
