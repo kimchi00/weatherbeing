@@ -46,21 +46,22 @@ class _HealthConcernsScreenState extends State<HealthConcernsScreen> {
     try {
       // Get the currently signed-in user
       User? user = _auth.currentUser;
-      
+
       if (user != null) {
         // Save the selected health concerns under the user's document in Firestore
         await _firestore.collection('users').doc(user.uid).set({
           'health_concerns': _selectedConcerns.toList(), // Save concerns as a list
         }, SetOptions(merge: true)); // Merge data so it doesn't overwrite the entire document
 
-        // Show confirmation message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Health concerns saved successfully!')),
+        // Navigate to congratulations screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CongratulationsScreen()), 
         );
       } else {
         // Show an error message if no user is signed in
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No user is currently signed in.')),
+          const SnackBar(content: Text('No user is currently signed in.')),
         );
       }
     } catch (e) {
@@ -83,26 +84,14 @@ class _HealthConcernsScreenState extends State<HealthConcernsScreen> {
               pinned: true, // Makes the header sticky
               floating: true, // Allows header to float while scrolling
               delegate: _StickyHeaderDelegate(
-                minHeight: 160.0, // Minimum height when scrolled
-                maxHeight: 160.0, // Maximum height when at the top
+                minHeight: 200.0, // Minimum height when scrolled
+                maxHeight: 200.0, // Maximum height when at the top
                 child: Column(
                   children: [
                     const SizedBox(height: 30),
                     Image.asset(
                       'assets/images/logo2.png', // Replace with your logo path
                       height: 100,
-                    ),
-                    const SizedBox(height: 10),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Please select any of the following health concerns that you may have.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -156,7 +145,7 @@ class _HealthConcernsScreenState extends State<HealthConcernsScreen> {
                                 horizontal: 30, vertical: 15),
                           ),
                           onPressed: () {
-                            // Handle back action
+                            Navigator.pop(context); // Handle back action
                           },
                           child: const Icon(Icons.arrow_back),
                         ),
@@ -170,11 +159,6 @@ class _HealthConcernsScreenState extends State<HealthConcernsScreen> {
                           onPressed: () async {
                             // Save selected concerns to Firestore when pressing Next
                             await _saveConcernsToFirestore();
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => CongratulationsScreen()), 
-                            );
                           },
                           child: const Icon(Icons.arrow_forward),
                         ),
@@ -206,7 +190,30 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(child: child);
+    return Container(
+      color: Colors.grey, // Set the entire sticky header's background to grey
+      child: Column(
+        children: [
+          const SizedBox(height: 30),
+          Image.asset(
+            'assets/images/logo2.png', // Replace with your logo path
+            height: 100,
+          ),
+          const SizedBox(height: 10),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Please select any of the following health concerns that you may have.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
