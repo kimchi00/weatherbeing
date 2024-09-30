@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:weatherbeing/congrats.dart';
 
 class HealthConcernsScreen extends StatefulWidget {
+  const HealthConcernsScreen({super.key});
+
   @override
   _HealthConcernsScreenState createState() => _HealthConcernsScreenState();
 }

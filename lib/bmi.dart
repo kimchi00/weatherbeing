@@ -8,6 +8,8 @@ class BMIScreen extends StatelessWidget {
   final TextEditingController heightController = TextEditingController();
   final TextEditingController weightController = TextEditingController();
 
+  BMIScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +62,7 @@ class BMIScreen extends StatelessWidget {
                       ),
                       child: TextFormField(
                         controller: heightController,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Accept digits and period
                         ],
@@ -96,7 +98,7 @@ class BMIScreen extends StatelessWidget {
                       ),
                       child: TextFormField(
                         controller: weightController,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: <TextInputFormatter>[
                           FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Accept digits and period
                         ],

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:weatherbeing/homepage.dart';
 import 'package:weatherbeing/main.dart';
 
 class CongratulationsScreen extends StatelessWidget {
+  const CongratulationsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +67,7 @@ class CongratulationsScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => MyApp()), 
+                        MaterialPageRoute(builder: (context) => HomePage()), 
                       );
                       },
                       child: const Text(

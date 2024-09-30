@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:weatherbeing/homepage.dart';
 import 'package:weatherbeing/onboard.dart'; // Adjust the import according to your project structure
 
 class SignIn extends StatefulWidget {
+  const SignIn({super.key});
+
   @override
   _SignInState createState() => _SignInState();
 }
@@ -25,6 +28,13 @@ class _SignInState extends State<SignIn> {
         password: _passwordController.text.trim(),
       );
 
+      // Navigate to HomePage if sign-in is successful
+      if (userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()), // Navigate to HomePage
+        );
+      }
     } on FirebaseAuthException catch (e) {
       // Handle Firebase authentication errors
       setState(() {
@@ -42,7 +52,7 @@ class _SignInState extends State<SignIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sign In'),
+        title: const Text('Sign In'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -53,7 +63,7 @@ class _SignInState extends State<SignIn> {
               // Email field
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -62,12 +72,12 @@ class _SignInState extends State<SignIn> {
                   return null;
                 },
               ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
 
               // Password field
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
+                decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -76,28 +86,24 @@ class _SignInState extends State<SignIn> {
                   return null;
                 },
               ),
-              SizedBox(height: 24.0),
+              const SizedBox(height: 24.0),
 
               // Error message
               if (_errorMessage != null)
                 Text(
                   _errorMessage!,
-                  style: TextStyle(color: Colors.red),
+                  style: const TextStyle(color: Colors.red),
                 ),
-              SizedBox(height: 16.0),
+              const SizedBox(height: 16.0),
 
               // Sign In button
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _signIn();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Onboard()), // Navigating to the SignUp page
-                    );
                   }
                 },
-                child: Text('Sign In'),
+                child: const Text('Sign In'),
               ),
             ],
           ),

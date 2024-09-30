@@ -60,7 +60,7 @@ class Onboard extends StatelessWidget {
               onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => SexSelection()), 
+                      MaterialPageRoute(builder: (context) => const SexSelection()), 
                     );
               },
               child: const Icon(
