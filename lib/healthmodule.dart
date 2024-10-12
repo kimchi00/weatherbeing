@@ -270,21 +270,94 @@ class _HealthModuleState extends State<HealthModule> {
       List<String> validRecommendations = [];
       _likelihoodValues.clear(); // Clear previous likelihood values
 
+
+            double calculateRecommendation({
+        required Map<String, double> weatherResults,
+        required Map<String, double> heatIndexResults,
+        required Map<String, double> uvIndexResults,
+        required Map<String, double> aqiResults,
+        required Map<String, double> humidityResults,
+        required Map<String, double> weights,
+      }) {
+        // Use the provided weights and evaluate each factor
+        return calculateRecommendationLikelihood({
+          // weather
+          "clearWeather": weatherResults["clear"] ?? 0.0,
+          "patchyRain": weatherResults["patchyRain"] ?? 0.0,
+          "lightRain": weatherResults["lightRain"] ?? 0.0,
+          "moderateRain": weatherResults["moderateRain"] ?? 0.0,
+          "strongRain": weatherResults["strongRain"] ?? 0.0,
+          "rainfall": weatherResults["rainfall"] ?? 0.0,
+          // heat index
+          "heatIndexOK": heatIndexResults["ok"] ?? 0.0,
+          "caution": heatIndexResults["caution"] ?? 0.0,
+          "extremeCaution": heatIndexResults["extremeCaution"] ?? 0.0,
+          "danger": heatIndexResults["danger"] ?? 0.0,
+          "extremeDanger": heatIndexResults["extremeDanger"] ?? 0.0,
+          // uv index
+          "low": uvIndexResults["low"] ?? 0.0,
+          "moderate": uvIndexResults["moderate"] ?? 0.0,
+          "high": uvIndexResults["high"] ?? 0.0,
+          "veryHigh": uvIndexResults["veryHigh"] ?? 0.0,
+          "extreme": uvIndexResults["extreme"] ?? 0.0,
+          // aqi
+          "good": aqiResults["good"] ?? 0.0,
+          "moderateAqi": aqiResults["moderate"] ?? 0.0,
+          "unhealthyForSensitive": aqiResults["unhealthyForSensitive"] ?? 0.0,
+          "unhealthy": aqiResults["unhealthy"] ?? 0.0,
+          "veryUnhealthy": aqiResults["veryUnhealthy"] ?? 0.0,
+          "hazardous": aqiResults["hazardous"] ?? 0.0,
+          // humidity
+          "humidityOK": humidityResults["low"] ?? 0.0,
+          "humiditymoderate": humidityResults["moderate"] ?? 0.0,
+          "humidityhigh": humidityResults["high"] ?? 0.0,
+          "humidityveryHigh": humidityResults["veryHigh"] ?? 0.0,
+        }, weights);
+      }
+
       // Recommendation 1
       Map<String, double> weights1 = {
+        // weather
         "clearWeather": 0.7,
+        "patchyRain": 0.0,
+        "lightRain": 0.0,
+        "moderateRain": 0.0,
+        "strongRain": 0.0,
+        "rainfall": 0.0,
+        // heat index
         "heatIndexOK": 0.7,
-        "uvIndexOK": 0.7,
-        "aqiGood": 0.1,
-        "humidityOK": 0.1
+        "caution": 0.0,
+        "extremeCaution": 0.0,
+        "danger": 0.0,
+        "extremeDanger": 0.0,
+        // uv index
+        "low": 0.7,
+        "moderate": 0.0,
+        "high": 0.0,
+        "veryHigh": 0.0,
+        "extreme": 0.0,
+        // aqi
+        "good": 0.1,
+        "moderateAqi": 0.0,
+        "unhealthyForSensitive": 0.0,
+        "unhealthy": 0.0,
+        "veryUnhealthy": 0.0,
+        "hazardous": 0.0,
+        // humidity
+        "humidityOK": 0.1,
+        "humiditymoderate": 0.0,
+        "humidityhigh": 0.0,
+        "humidityveryHigh": 0.0,
       };
-      double likelihood1 = calculateRecommendationLikelihood({
-        "clearWeather": weatherResults["clear"] ?? 0.0,
-        "heatIndexOK": heatIndexResults["ok"] ?? 0.0,
-        "uvIndexOK": uvIndexResults["low"] ?? 0.0,
-        "aqiGood": aqiResults["good"] ?? 0.0,
-        "humidityOK": humidityResults["low"] ?? 0.0,
-      }, weights1);
+
+      double likelihood1 = calculateRecommendation(
+        weatherResults: weatherResults,
+        heatIndexResults: heatIndexResults,
+        uvIndexResults: uvIndexResults,
+        aqiResults: aqiResults,
+        humidityResults: humidityResults,
+        weights: weights1,
+      );
 
       _likelihoodValues['Recommendation 1'] = likelihood1; // Store for debugging
 
@@ -298,23 +371,47 @@ class _HealthModuleState extends State<HealthModule> {
 
       // Recommendation 2
       Map<String, double> weights2 = {
-         "clearWeather": 0.7,
-        "heatIndexOK": 0.7,
-        "uvIndexOK": 0.7,
-        "aqiGood": 0.1,
+        // weather
+        "clearWeather": 0.0,
+        "patchyRain": 0.6,
+        "lightRain": 0.5,
+        "moderateRain": 0.2,
+        "strongRain": 0.0,
+        "rainfall": 0.0,
+        // heat index
+        "heatIndexOK": 0.2,
+        "caution": 0.6,
+        "extremeCaution": 0.1,
+        "danger": 0.0,
+        "extremeDanger": 0.0,
+        // uv index
+        "low": 0.1,
+        "moderate": 0.5,
+        "high": 0.3,
+        "veryHigh": 0.0,
+        "extreme": 0.0,
+        // aqi
+        "good": 0.1,
+        "moderateAqi": 0.2,
+        "unhealthyForSensitive": 0.3,
+        "unhealthy": 0.0,
+        "veryUnhealthy": 0.0,
+        "hazardous": 0.0,
+        // humidity
         "humidityOK": 0.1,
-        "lightRain": 0.7,
-        "humidityHigh": 0.3
+        "humiditymoderate": 0.5,
+        "humidityhigh": 0.2,
+        "humidityveryHigh": 0.0,
       };
-      double likelihood2 = calculateRecommendationLikelihood({
-        "clearWeather": weatherResults["clear"] ?? 0.0,
-        "heatIndexOK": heatIndexResults["ok"] ?? 0.0,
-        "uvIndexOK": uvIndexResults["low"] ?? 0.0,
-        "aqiGood": aqiResults["good"] ?? 0.0,
-        "humidityOK": humidityResults["low"] ?? 0.0,
-        "lightRain": weatherResults["lightRain"] ?? 0.0,
-        "humidityHigh": humidityResults["high"] ?? 0.0,
-      }, weights2);
+
+      double likelihood2 = calculateRecommendation(
+        weatherResults: weatherResults,
+        heatIndexResults: heatIndexResults,
+        uvIndexResults: uvIndexResults,
+        aqiResults: aqiResults,
+        humidityResults: humidityResults,
+        weights: weights2,
+      );
 
       _likelihoodValues['Recommendation 2'] = likelihood2; // Store for debugging
 
@@ -329,14 +426,47 @@ class _HealthModuleState extends State<HealthModule> {
 
       // Recommendation 3
       Map<String, double> weights3 = {
-        "heatIndexExtreme": 0.5,
-        "uvIndexExtreme": 0.5,
+         // weather
+        "clearWeather": 0.0,
+        "patchyRain": 0.6,
+        "lightRain": 0.5,
+        "moderateRain": 0.2,
+        "strongRain": 0.0,
+        "rainfall": 0.0,
+        // heat index
+        "heatIndexOK": 0.2,
+        "caution": 0.6,
+        "extremeCaution": 0.1,
+        "danger": 0.0,
+        "extremeDanger": 0.0,
+        // uv index
+        "low": 0.1,
+        "moderate": 0.5,
+        "high": 0.3,
+        "veryHigh": 0.0,
+        "extreme": 0.0,
+        // aqi
+        "good": 0.1,
+        "moderateAqi": 0.2,
+        "unhealthyForSensitive": 0.3,
+        "unhealthy": 0.0,
+        "veryUnhealthy": 0.0,
+        "hazardous": 0.0,
+        // humidity
+        "humidityOK": 0.1,
+        "humiditymoderate": 0.5,
+        "humidityhigh": 0.2,
+        "humidityveryHigh": 0.0,
       };
 
-      double likelihood3 = calculateRecommendationLikelihood({
-        "heatIndexExtreme": heatIndexResults["extremeDanger"] ?? 0.0,
-        "uvIndexExtreme": uvIndexResults["extreme"] ?? 0.0,
-      }, weights3);
+        double likelihood3 = calculateRecommendation(
+        weatherResults: weatherResults,
+        heatIndexResults: heatIndexResults,
+        uvIndexResults: uvIndexResults,
+        aqiResults: aqiResults,
+        humidityResults: humidityResults,
+        weights: weights3,
+      );
 
       _likelihoodValues['Recommendation 3'] = likelihood3; // Store for debugging
 
