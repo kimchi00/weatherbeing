@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:weatherbeing/algotest.dart';
 import 'package:weatherbeing/checklist.dart';
 import 'package:weatherbeing/healthmodule.dart';
 import 'package:weatherbeing/homepage.dart';
@@ -243,18 +244,25 @@ class _UserProfileState extends State<UserProfile> {
   Widget _buildSettingsAndSignOut() {
     return Column(
       children: [
+        // Settings Button
         TextButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FuzzyPage()), // Redirect to FuzzyPage
+            );
+          },
           icon: Icon(Icons.settings, color: Colors.black),
           label: Text('Settings', style: TextStyle(color: Colors.black)),
         ),
         SizedBox(height: 10),
+        // Sign Out Button
         TextButton.icon(
           onPressed: () async {
-            await _auth.signOut();
+            await _auth.signOut();  // Sign out the user
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MyHomePage()),
+              MaterialPageRoute(builder: (context) => MyHomePage()),  // Redirect to home after sign out
             );
           },
           icon: Icon(Icons.logout, color: Colors.black),
@@ -263,6 +271,7 @@ class _UserProfileState extends State<UserProfile> {
       ],
     );
   }
+
 
   Widget _buildBottomNavigationBar() {
     return BottomNavigationBar(

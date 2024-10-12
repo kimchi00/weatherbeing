@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:weatherbeing/algotest.dart';
+import 'package:weatherbeing/homepage.dart';
 import 'package:weatherbeing/signin.dart';
 import 'package:weatherbeing/signup.dart';
 
@@ -28,7 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home:  const MyHomePage(),
     );
   }
 }

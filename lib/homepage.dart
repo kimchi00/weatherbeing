@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'algo.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -241,10 +242,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          Icon(
-            Icons.wb_sunny, // You can adjust this icon based on the real condition code
-            color: Colors.orange,
-            size: 80,
+          Image.network(
+            'https:${weatherData!['current']['condition']['icon']}',  
+            width: 140, // Icon size
+            height: 140,
           ),
         ],
       ),
@@ -340,7 +341,7 @@ class _HomePageState extends State<HomePage> {
           ),
           _buildDetailCard(
             'Air Quality Index',
-            '${weatherData!['current']['air_quality']['us-epa-index']}',
+            _getAirQualityDescription(weatherData!['current']['air_quality']['us-epa-index']), 
             Icons.air_outlined,
             Colors.purpleAccent,
           ),
@@ -354,6 +355,28 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  String _getAirQualityDescription(int airQualityIndex) {
+  String description = '';
+
+  if (airQualityIndex == 1) {
+    description = 'Good';
+  } else if (airQualityIndex == 2) {
+    description = 'Moderate';
+  } else if (airQualityIndex == 3) {
+    description = 'Unhealthy for Sensitive Groups';
+  } else if (airQualityIndex == 4) {
+    description = 'Unhealthy';
+  } else if (airQualityIndex == 5) {
+    description = 'Very Unhealthy';
+  } else if (airQualityIndex == 6) {
+    description = 'Hazardous';
+  } else {
+    description = 'Unknown';
+  }
+
+  return '$airQualityIndex ($description)';
+}
 
 Widget _buildForecastCard(String day, String weatherDescription, IconData icon) {
   return Container(
@@ -468,4 +491,5 @@ Widget _buildForecastCard(String day, String weatherDescription, IconData icon) 
       ],
     );
   }
+
 }
