@@ -270,7 +270,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Expanded(
             child: Text(
-              'Lorem ipsum dolor sit amet consectetur. Tellus senectus nec enim volutpat nunc.',
+              'Specific Recos',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
