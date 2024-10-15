@@ -1,284 +1,412 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:weatherbeing/healthmodule.dart';
-import 'package:weatherbeing/homepage.dart';
-import 'package:weatherbeing/userprofile.dart';
+import 'package:weatherbeing/main.dart';
+//import 'main.dart';
 
 class ChecklistPage extends StatefulWidget {
   @override
-  _ChecklistPageState createState() => _ChecklistPageState();
+  _ChecklistScreenState createState() => _ChecklistScreenState();
 }
 
-class _ChecklistPageState extends State<ChecklistPage> {
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
-  final TextEditingController _goalTitleController = TextEditingController();
-  final TextEditingController _goalDescriptionController = TextEditingController();
-  bool _showGoalInput = false; // Track whether to show the goal input
+class _ChecklistScreenState extends State<ChecklistPage> {
+  int waterIntake = 0;
+  final List<Map<String, dynamic>> _todoList = [];
 
-  Future<void> _saveGoal() async {
-    final currentUser = _auth.currentUser;
-    if (currentUser != null) {
-      await _firestore.collection('users').doc(currentUser.uid).collection('goals').add({
-        'title': _goalTitleController.text,
-        'description': _goalDescriptionController.text,
-        'completed': false,
-        'timestamp': Timestamp.now(),
+  void _incrementWaterIntake() {
+    setState(() {
+      waterIntake++;
+      if (waterIntake == 13) {
+        _showCongratulatoryMessage();
+      }
+    });
+  }
+
+  void _decrementWaterIntake() {
+    if (waterIntake > 0) {
+      setState(() {
+        waterIntake--;
       });
-      _goalTitleController.clear();
-      _goalDescriptionController.clear();
     }
   }
 
-    void _onItemTapped(int index) {
-    setState(() {
-    });
+  void _showCongratulatoryMessage() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Congratulations!'),
+          content: Text(
+              'You have reached your daily water intake goal! Keep up the good work!'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-    // Check if the Health tab is tapped
-    if (index == 0) {
-      // Navigate to HealthModule when Health is selected
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HealthModule()),
-      );
-    } else if (index == 3) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => UserProfile()),
-      );
-    }
+  void _showWaterIntakeExplanation() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Water Intake Explanation'),
+          content: Text(
+              'These is the number of optimal daily water intake advised for you.'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showGoalsExplanation() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Goals Explanation'),
+          content: Text(
+              'Set your own goals to earn more points!'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddToDoDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        String? newTitle;
+        String? newBody;
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  newTitle = value;
+                },
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                onChanged: (value) {
+                  newBody = value;
+                },
+                maxLines: 5,
+                decoration: InputDecoration(
+                  //labelText: 'To-Do Body',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Cancel'),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (newTitle != null && newTitle!.isNotEmpty) {
+                          _addToDoItem(newTitle!, newBody ?? '');
+                        }
+                        Navigator.pop(context);
+                      },
+                      child: Text('Add'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditToDoDialog(int index) {
+    String? editedTitle = _todoList[index]['title'];
+    String? editedBody = _todoList[index]['body'];
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Edit To-Do',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                onChanged: (value) {
+                  editedTitle = value;
+                },
+                controller:
+                    TextEditingController(text: _todoList[index]['title']),
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                onChanged: (value) {
+                  editedBody = value;
+                },
+                controller:
+                    TextEditingController(text: _todoList[index]['body']),
+                maxLines: 5,
+                decoration: InputDecoration(
+                  //labelText: 'To-Do Body',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Cancel'),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  SizedBox(
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (editedTitle != null && editedTitle!.isNotEmpty) {
+                          _editToDoItem(index, editedTitle!, editedBody ?? '');
+                        }
+                        Navigator.pop(context);
+                      },
+                      child: Text('Save'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _addToDoItem(String title, String body) {
+    setState(() {
+      _todoList.insert(0, {'title': title, 'body': body, 'isDone': false});
+    });
+  }
+
+  void _editToDoItem(int index, String newTitle, String newBody) {
+    setState(() {
+      _todoList[index]['title'] = newTitle;
+      _todoList[index]['body'] = newBody;
+    });
+  }
+
+  void _removeToDoItem(int index) {
+    setState(() {
+      _todoList.removeAt(index);
+    });
+  }
+
+  void _toggleToDoItem(int index) {
+    setState(() {
+      _todoList[index]['isDone'] = !_todoList[index]['isDone'];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF3F6FA),
       appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/images/logo2.png', // Adjust the path as needed
-              height: 40,
-            ),
-            SizedBox(width: 10),
-            Text(
-              'Weather-Being',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: Text('Weather-Being'),
+        //automaticallyImplyLeading: false, // This removes the default back button
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Water Intake Section
-            _buildWaterIntakeSection(),
-            SizedBox(height: 20),
-
-            // Goals Section
-            _buildGoalsSection(),
-
-            SizedBox(height: 20),
-
-            // Show Goal Input Section
-            _showGoalInput ? _buildGoalInputSection() : Container(),
-
-            // Floating Action Button
-            _buildAddGoalButton(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildWaterIntakeSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Water intake',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        Icon(Icons.info_outline, color: Colors.grey),
-      ],
-    );
-  }
-
-  Widget _buildGoalsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Water Intake Meter',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: Icon(Icons.info_outline),
+                  onPressed: _showWaterIntakeExplanation,
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  flex: waterIntake,
+                  child: Container(
+                    height: 20,
+                    color: Colors.blue,
+                  ),
+                ),
+                Expanded(
+                  flex: 13 -
+                      waterIntake, //this is responsible for the display for the water intake meter
+                  child: Container(
+                    height: 20,
+                    color: Colors.grey[300],
+                  ),
+                ),
+                SizedBox(width: 10),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: _incrementWaterIntake,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.remove),
+                      onPressed: _decrementWaterIntake,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
             Text(
-              'Goals',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Water Intake: $waterIntake glasses',
+              style: TextStyle(fontSize: 16),
             ),
-            Icon(Icons.info_outline, color: Colors.grey),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Goals',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: Icon(Icons.info_outline),
+                  onPressed: _showGoalsExplanation,
+                ),
+              ],
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _todoList.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    margin: EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      title: Text(
+                        _todoList[index]['title'],
+                        style: TextStyle(
+                          decoration: _todoList[index]['isDone']
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _todoList[index]['body'] != null &&
+                                _todoList[index]['body'].isNotEmpty
+                            ? _todoList[index]['body'].split('\n').first
+                            : '',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      leading: Checkbox(
+                        value: _todoList[index]['isDone'],
+                        onChanged: (value) {
+                          _toggleToDoItem(index);
+                        },
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons
+                            .delete), //if I wanted to change the color of the delet icon to red just add (Icons.delete, color: Colors.red)
+                        onPressed: () => _removeToDoItem(index),
+                      ),
+                      onTap: () => _showEditToDoDialog(index),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
-        SizedBox(height: 10),
-        // Goals list would go here - dynamically populate from Firestore
-        StreamBuilder<QuerySnapshot>(
-          stream: _firestore
-              .collection('users')
-              .doc(_auth.currentUser!.uid)
-              .collection('goals')
-              .orderBy('timestamp', descending: false)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Center(child: CircularProgressIndicator());
-            }
-            final goals = snapshot.data!.docs;
-            List<Widget> goalWidgets = [];
-            for (var goal in goals) {
-              final goalTitle = goal['title'];
-              final goalDescription = goal['description'];
-              final completed = goal['completed'];
-
-              goalWidgets.add(_buildGoalCard(goalTitle, goalDescription, completed));
-            }
-            return Column(
-              children: goalWidgets,
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGoalCard(String title, String description, bool completed) {
-    return Card(
-      child: ListTile(
-        leading: Checkbox(
-          value: completed,
-          onChanged: (bool? value) {
-            // Update goal completion status in Firestore
-            setState(() {
-              completed = value!;
-            });
-          },
-        ),
-        title: Text(title),
-        subtitle: Text(description),
       ),
-    );
-  }
-
-  Widget _buildGoalInputSection() {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            spreadRadius: 1,
-            blurRadius: 10,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddToDoDialog,
+        child: Icon(Icons.add),
+      ),
+      //disregard this part, since I just tried using adding a bottom nav bar
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.health_and_safety),
+            label: 'Health',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.checklist_sharp),
+            label: 'Checklist',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pop(context);
+          }
+        },
       ),
-      child: Column(
-        children: [
-          TextFormField(
-            controller: _goalTitleController,
-            decoration: InputDecoration(
-              labelText: 'Title',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SizedBox(height: 10),
-          TextFormField(
-            controller: _goalDescriptionController,
-            decoration: InputDecoration(
-              labelText: 'Input new goal here',
-              border: OutlineInputBorder(),
-            ),
-            maxLines: 3,
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  _saveGoal();
-                  setState(() {
-                    _showGoalInput = false;
-                  });
-                },
-                child: Icon(Icons.check),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _showGoalInput = false;
-                  });
-                },
-                child: Icon(Icons.close),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddGoalButton() {
-    return FloatingActionButton(
-      onPressed: () {
-        setState(() {
-          _showGoalInput = !_showGoalInput;
-        });
-      },
-      child: Icon(Icons.add),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.pinkAccent,
-      unselectedItemColor: Colors.grey,
-      showUnselectedLabels: true,
-      currentIndex: 2,
-      onTap: _onItemTapped, // This handles the tap and navigation logic
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.favorite),
-          label: 'Health',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.check_circle),
-          label: 'Checklist',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
     );
   }
 }
