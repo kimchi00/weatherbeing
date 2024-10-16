@@ -198,8 +198,8 @@ class _HealthModuleState extends State<HealthModule> {
   }
 
   Map<String, double> evaluateWeather(double mm) {
-    double clear(double mm) => trapmf(mm, -10.0, 0.0, 0.1, 0.5);
-    double patchyRain(double mm) =>  trapmf(mm, 0.1, 1.0, 1.9, 3.0);
+    double clear(double mm) => trapmf(mm, 0.0, 0.0, 0.01, 0.5);
+    double patchyRain(double mm) => trapmf(mm, 0.01, 0.02, 1.9, 3.0);
     double lightRain(double mm) => trapmf(mm, 2.0, 3.0, 4.0, 5.0);
     double moderateRain(double mm) => trapmf(mm, 4.5, 5.0, 6.0, 7.0);
     double strongRain(double mm) => trapmf(mm, 10.0, 15.0, 20.0, 25.0);
@@ -737,6 +737,106 @@ class _HealthModuleState extends State<HealthModule> {
         "Hello, $userName! It’s best to stay indoors today, the rain is quite heavy and the humidity is high. Make sure to stay dry if you need to go outside. Bring a face mask too, raindrops can stir up allergens like pollen which can trigger asthma. Stay dry and safe!"
       );
     }
+
+
+      // Recommendation for slight rain
+      Map<String, double> slightRainWeights = {
+       // weather
+        "clearWeather": 0.0,
+        "patchyRain": 1,
+        "lightRain": 0.7,
+        "moderateRain": 0.7,
+        "strongRain": 0.7,
+        "rainfall": 0.7,
+        // heat index
+        "heatIndexOK": 0.0,
+        "caution": 0.0,
+        "extremeCaution": 0.7,
+        "danger": 0.0,
+        "extremeDanger": 0.0,
+        // uv index
+        "low": 0.0,
+        "moderate": 0.0,
+        "high": 0.7,
+        "veryHigh": 0.7,
+        "extreme": 0.0,
+        // aqi
+        "good": 0.7,
+        "moderateAqi": 0.0,
+        "unhealthyForSensitive": 0.0,
+        "unhealthy": 0.0,
+        "veryUnhealthy": 0.0,
+        "hazardous": 0.0,
+        // humidity
+        "humidityOK": 0.1,
+        "humiditymoderate": 0.4,
+        "humidityhigh": 0.7,
+        "humidityveryHigh": 0.7,
+      };
+
+        double slightRainlikelihood = calculateRecommendation(
+        weatherResults: weatherResults,
+        heatIndexResults: heatIndexResults,
+        uvIndexResults: uvIndexResults,
+        aqiResults: aqiResults,
+        humidityResults: humidityResults,
+        weights: slightRainWeights,
+      );
+
+      _likelihoodValues['slightRainlikelihood'] = slightRainlikelihood; // Store for debugging
+      const double thresholdSlightRain = 0.3;
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Asthma")) {
+        validRecommendations.add(
+          "Hello, $userName! It might rain today and the humidity is really high! High humidity can irritate the airways, making it harder for individuals with asthma to breathe. It’s best to stay indoors where humidity is more controlled. Keep safe!"
+        );
+        validRecommendations.add(
+          "Hello, $userName! It looks like we're in for a bit of rain today. Humidity is also quite high. Please stay cautious today as high humidity can trigger bronchial spasms and inflammation. Have a nice day!"
+        );
+        validRecommendations.add(
+          "Hello, $userName! It’s best to stay indoors today, it's quite hot, it might rain and the humidity is high. Make sure to stay dry if you need to go outside. Bring a face mask too, raindrops can stir up allergens like pollen which can trigger asthma. Stay dry and safe!"
+        );
+        }
+
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Allergies")) {
+        validRecommendations.add(
+          "Hello, $userName! It’s might be rainy today. If you have watery, itchy eyes and a runny or stuffy nose, it might be because of the weather. It’s best to stay dry to avoid worsening your symptoms. Have a nice day!!"
+        );
+      }
+
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Acute respiratory tract infection")) {
+        validRecommendations.add(
+          "Hello, $userName! It’s quite hot today but there is still chance of rain. Hot temperatures have been known to increase emergency department visits for acute upper respiratory infections and influenza, keep safe today!!"
+        );
+      }
+
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Diabetes")) {
+        validRecommendations.add(
+          "Hello, $userName! Today looks like a very hot day. Aside from the heat making us sweat, diabetes complications, such as damage to blood vessels and nerves, can affect your sweat glands so your body can't cool as effectively. It’s extra important to stay cool and stay in the shade today! "
+        );
+      }
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Pneumonia")) {
+        validRecommendations.add(
+          "Hello, $userName! It’s quite hot today, but it might still rain, try to stay cool and out of the sun. Cold spells are not the only cause of pneumonia, heatwaves can cause the illness too! Stay hydrated!"
+        );
+      }
+
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Diarrhea")) {
+        validRecommendations.add(
+          "Hello, $userName!  Try to stay out of the sun today! Heat exhaustion and dehydration can cause heat-induced diarrhea, which emerges as a result of the body’s response to extreme temperatures. Stay hydrated out there!"
+        );
+      }
+
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Dehydration")) {
+        validRecommendations.add(
+          "Hello, $userName! Hot day, huh? Remember that dehydration can be caused by something as small as not intaking enough water during hot weather, but watch out! Diarrhea and heat exhaustion can cause dehydration too, and they are both common in the hot weather. Stay hydrated and cool!"
+        );
+      }
+
+      if (slightRainlikelihood > thresholdSlightRain && healthConcerns.contains("Heatstroke")) {
+        validRecommendations.add(
+          "Hello, $userName! Heatstroke is a condition caused by the body overheating, usually as a result of prolonged exposure to or physical exertion in high temperatures, stay in the shade and out of the sun as much as you can today!"
+        );
+      }
 
           // 8 FOR HYPERTENSION Sunny, Moderate Heat Index && Humidity, Normal Range AQI && UV Index
       Map<String, double> weights8 = {

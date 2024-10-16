@@ -34,6 +34,7 @@ class _HealthConcernsScreenState extends State<HealthConcernsScreen> {
     'Heat rash',
     'Skin allergy',
     'Respiratory allergy',
+    'Allergies',
   ];
 
   // Set to track selected health concerns
