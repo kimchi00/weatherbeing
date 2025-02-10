@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "883465778101",
+    "project_id": "weatherbeingg",
+    "storage_bucket": "weatherbeingg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:883465778101:android:3e4e08b811d46d2d171ffc",
+        "android_client_info": {
+          "package_name": "com.example.weatherbeingg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOB9l8un8-xy_NAok6qDCPjzzuDudDDOk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
