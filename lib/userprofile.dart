@@ -221,7 +221,7 @@ Widget _buildUserInfo() {
     children: [
       _buildInfoRow('Age', age.toString()),
       _buildInfoRow('Gender', gender),
-           Row(
+      Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildInfoColumn('Height', '${height.toStringAsFixed(2)} m'),
@@ -230,13 +230,26 @@ Widget _buildUserInfo() {
       ),
       _buildInfoRowWithIcon(
         'BMI',
-        bmi.toStringAsFixed(2),
+        '${bmi.toStringAsFixed(2)} (${_getBMICategory(bmi)})',
         Icons.info_outline,
         _showBMIExplanation, // Call the explanation dialog
       ),
     ],
   );
 }
+
+String _getBMICategory(double bmi) {
+  if (bmi < 18.5) {
+    return 'Underweight';
+  } else if (bmi < 24.9) {
+    return 'Normal';
+  } else if (bmi < 29.9) {
+    return 'Overweight';
+  } else {
+    return 'Obese';
+  }
+}
+
 
 
   Widget _buildInfoRowWithIcon(

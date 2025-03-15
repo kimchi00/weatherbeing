@@ -11,6 +11,10 @@ class ChecklistPage extends StatefulWidget {
 class _ChecklistScreenState extends State<ChecklistPage> {
   int waterIntake = 0;
   final List<Map<String, dynamic>> _todoList = [];
+  final List<Map<String, dynamic>> _activeGoals = [];
+  final List<Map<String, dynamic>> _completedGoals = [];
+  
+  
 
   void _showEditToDoDialog(int index) {
   String? editedTitle = _todoList[index]['title'];
@@ -302,18 +306,19 @@ void _showAddToDoDialog() {
     },
   );
 }
-
-
+  // Add to the active goals
 void _addToDoItem(String title, String body) async {
   User? user = FirebaseAuth.instance.currentUser;
 
   if (user != null) {
     String goalId = Uuid().v4(); // Generate a unique ID for the goal
+    DateTime createdAt = DateTime.now(); // Store the current time when the goal is added
     Map<String, dynamic> newGoal = {
       'id': goalId,
       'title': title,
       'body': body,
       'isDone': false,
+      'createdAt': createdAt, // Add createdAt timestamp to the goal
     };
 
     try {
@@ -325,12 +330,18 @@ void _addToDoItem(String title, String body) async {
         'goals': FieldValue.arrayUnion([newGoal]) // Add new goal to the array
       });
 
-      // Add the goal to the local list
+      // Add the goal to the local active list
       setState(() {
-        _todoList.insert(0, newGoal);
+        _activeGoals.insert(0, newGoal);
       });
 
       print('Goal added successfully!');
+
+      // Set a reminder after 24 hours to remind the user to complete the goal
+      Future.delayed(const Duration(hours: 24), () {
+        _showGoalReminder(goalId); // Show reminder popup after 24 hours
+      });
+
     } catch (e) {
       print('Failed to add goal: $e');
     }
@@ -339,7 +350,123 @@ void _addToDoItem(String title, String body) async {
   }
 }
 
+// Function to show a reminder pop-up
+void _showGoalReminder(String goalId) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Goal Reminder'),
+        content: const Text('You have a goal that is pending. Please complete it!'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              // Handle goal completion or dismiss the reminder
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
+  // Mark the goal as completed and move to completed goals list
+  void _toggleToDoItem(int index) async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      Map<String, dynamic> updatedGoal = {
+        ..._activeGoals[index],
+        'isDone': !_activeGoals[index]['isDone'], // Toggle the isDone status
+      };
+
+      try {
+        // Update the goal in Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'goals': FieldValue.arrayRemove([_activeGoals[index]]),
+        });
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'goals': FieldValue.arrayUnion([updatedGoal]),
+        });
+
+        // Update the local list
+        setState(() {
+          _activeGoals[index] = updatedGoal;
+          if (updatedGoal['isDone']) {
+            _completedGoals.add(updatedGoal);
+            _activeGoals.removeAt(index);
+          }
+        });
+      } catch (e) {
+        print('Failed to update goal: $e');
+      }
+    }
+  }
+
+  // Reuse completed goal and add it back to active goals
+  void _reuseCompletedGoal(int index) async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      Map<String, dynamic> goalToReuse = _completedGoals[index];
+
+      try {
+        // Update goal status to active in Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'goals': FieldValue.arrayUnion([goalToReuse]),
+        });
+
+        // Remove it from completed goals list
+        setState(() {
+          _completedGoals.removeAt(index);
+          goalToReuse['isDone'] = false; // Reset completion status
+          _activeGoals.add(goalToReuse);
+        });
+      } catch (e) {
+        print('Failed to reuse goal: $e');
+      }
+    }
+  }
+
+  // Show dialog to confirm if user wants to reuse the completed goal
+  void _showReuseGoalDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Reuse this goal?'),
+          content: Text('Do you want to move this goal back to your active list?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Dismiss the dialog
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                _reuseCompletedGoal(index);
+                Navigator.pop(context); // Dismiss the dialog
+              },
+              child: Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
 void _removeToDoItem(int index) async {
   User? user = FirebaseAuth.instance.currentUser;
@@ -364,49 +491,6 @@ void _removeToDoItem(int index) async {
       print('Goal removed successfully!');
     } catch (e) {
       print('Failed to remove goal: $e');
-    }
-  } else {
-    print('No user is logged in.');
-  }
-}
-
-
-
-
-void _toggleToDoItem(int index) async {
-  User? user = FirebaseAuth.instance.currentUser;
-
-  if (user != null) {
-    Map<String, dynamic> updatedGoal = {
-      ..._todoList[index],
-      'isDone': !_todoList[index]['isDone'], // Toggle the isDone status
-    };
-
-    try {
-      // Remove the old goal and add the updated one in Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
-        'goals': FieldValue.arrayRemove([_todoList[index]]),
-      });
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
-        'goals': FieldValue.arrayUnion([updatedGoal]),
-      });
-
-      // Update the local list
-      setState(() {
-        _todoList[index] = updatedGoal;
-      });
-
-      if (updatedGoal['isDone']) {
-        _showCompletionMessage(index);
-      }
-    } catch (e) {
-      print('Failed to update goal: $e');
     }
   } else {
     print('No user is logged in.');
@@ -538,6 +622,7 @@ void _showCompletionMessage(int index) {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Water Intake Meter Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -588,11 +673,13 @@ void _showCompletionMessage(int index) {
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
+
+            // Active Goals Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Goals',
+                  'Active Goals',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
@@ -603,7 +690,7 @@ void _showCompletionMessage(int index) {
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: _todoList.length,
+                itemCount: _activeGoals.length,
                 itemBuilder: (context, index) {
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 8.0),
@@ -614,22 +701,22 @@ void _showCompletionMessage(int index) {
                       contentPadding:
                           EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                       title: Text(
-                        _todoList[index]['title'],
+                        _activeGoals[index]['title'],
                         style: TextStyle(
-                          decoration: _todoList[index]['isDone']
+                          decoration: _activeGoals[index]['isDone']
                               ? TextDecoration.lineThrough
                               : TextDecoration.none,
                         ),
                       ),
                       subtitle: Text(
-                        _todoList[index]['body'] != null &&
-                                _todoList[index]['body'].isNotEmpty
-                            ? _todoList[index]['body'].split('\n').first
+                        _activeGoals[index]['body'] != null &&
+                                _activeGoals[index]['body'].isNotEmpty
+                            ? _activeGoals[index]['body'].split('\n').first
                             : '',
                         overflow: TextOverflow.ellipsis,
                       ),
                       leading: Checkbox(
-                        value: _todoList[index]['isDone'],
+                        value: _activeGoals[index]['isDone'],
                         onChanged: (value) {
                           _toggleToDoItem(index);
                         },
@@ -639,6 +726,48 @@ void _showCompletionMessage(int index) {
                         onPressed: () => _removeToDoItem(index),
                       ),
                       onTap: () => _showEditToDoDialog(index),
+                    ),
+                  );
+                },
+              ),
+            ),
+            
+            // Completed Goals Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Completed Goals',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _completedGoals.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    margin: EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      title: Text(
+                        _completedGoals[index]['title'],
+                        style: TextStyle(
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _completedGoals[index]['body'] != null &&
+                                _completedGoals[index]['body'].isNotEmpty
+                            ? _completedGoals[index]['body'].split('\n').first
+                            : '',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () => _showReuseGoalDialog(index),
                     ),
                   );
                 },

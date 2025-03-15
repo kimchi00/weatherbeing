@@ -48,6 +48,7 @@ class _SignUpState extends State<SignUp> {
       // Save user information in Firestore
       await _firestore.collection('users').doc(userCredential.user?.uid).set({
         'name': _nameController.text.trim(),
+        'dob': _dobController.text, // Store DOB for age calculation later
         'age': age, // Storing calculated age
         'email': _emailController.text.trim(),
         'health_concerns': [], // Initialize health_concerns as an empty list
@@ -86,17 +87,56 @@ class _SignUpState extends State<SignUp> {
     }
   }
 
-// Method to calculate age based on the date of birth
-int _calculateAge(DateTime dob) {
-  DateTime today = DateTime.now();
-  int age = today.year - dob.year;
+  // Method to calculate age based on the date of birth
+  int _calculateAge(DateTime dob) {
+    DateTime today = DateTime.now();
+    int age = today.year - dob.year;
 
-  if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
-    age--;
+    if (today.month < dob.month || (today.month == dob.month && today.day < dob.day)) {
+      age--;
+    }
+
+    return age;
   }
 
-  return age;
-}
+  // Function to update the user's age on their birthday
+  Future<void> _updateAgeIfBirthday(String userId, DateTime dob) async {
+    DateTime today = DateTime.now();
+    // Check if today is the user's birthday
+    if (today.month == dob.month && today.day == dob.day) {
+      // Calculate the new age
+      int age = _calculateAge(dob);
+      
+      // Update the user's age in Firestore
+      await _firestore.collection('users').doc(userId).update({
+        'age': age,
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Add a listener to check for the birthday and update the user's age
+    _checkAndUpdateAge();
+  }
+
+  // Function to check if it's the user's birthday and update the age
+  Future<void> _checkAndUpdateAge() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      // Fetch user data from Firestore
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        String dobString = userDoc['dob'];  // Retrieve DOB string
+        DateTime dob = DateTime.parse(dobString);
+
+        // Check and update age if it's the user's birthday
+        await _updateAgeIfBirthday(user.uid, dob);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
